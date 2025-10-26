@@ -20,12 +20,13 @@ A backend service designed to replicate the core functionalities of Google Calen
 * **Database:** PostgreSQL (v16)
 * **Containerization:** Docker
 * **Build/Task Runner:** `make`
+* **Frontend:** (Assumed) React/Vue/Svelte, etc. via `npm`
 
 ---
 
 ## 🚀 Getting Started
 
-Follow these instructions to get the backend server up and running on your local machine for development and testing.
+Follow these instructions to get the backend server and frontend application up and running on your local machine.
 
 ### Prerequisites
 
@@ -33,6 +34,7 @@ Before you begin, ensure you have the following software installed on your syste
 * [Python 3](https://www.python.org/downloads/)
 * [Docker](https://www.docker.com/get-started/)
 * `make` (Usually pre-installed on macOS/Linux. Windows users may need to install it via [Chocolatey](https://chocolatey.org/packages/make) or use WSL).
+* [Node.js and npm](https://nodejs.org/en/download) (for the frontend)
 
 ### 1. Database Setup (PostgreSQL with Docker)
 
@@ -63,7 +65,7 @@ We use Docker to run a PostgreSQL database container. This avoids having to inst
 
 Now that the database is running, let's set up the Python application.
 
-1.  **Clone the repository:**
+1.  **Clone the repository** (if you haven't already):
     ```bash
     git clone [https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git](https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git)
     cd YOUR_REPOSITORY
@@ -92,9 +94,30 @@ Now that the database is running, let's set up the Python application.
     ```bash
     make run
     ```
+    
+    Your backend server is now running on **`http://localhost:8080`**.
 
-5.  **You're all set!**
-    The server is now running on **`http://localhost:8080`**.
+### 3. Frontend Application Setup
+
+Set up the frontend to interact with your running backend.
+
+1.  **Clone the repository** (if separate, or navigate to the frontend directory):
+    *(Assuming it's in a directory named `calendar-clone` inside the main repo, adjust as needed)*
+    ```bash
+    cd calendar-clone 
+    ```
+
+2.  **Install npm dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Run the frontend development server:**
+    ```bash
+    npm run dev
+    ```
+
+    Your frontend application is now running (usually on `http://localhost:3000` or a similar port).
 
 ---
 
@@ -165,10 +188,35 @@ Once your server is running, you can insert some sample data directly into the d
     
     To exit the `psql` shell, type `\q` and press Enter.
 
-You can now use an API client to hit your endpoints (e.g., `GET http://localhost:8080/v1/events`) and see the data.
+---
+
+## 📋 API Documentation
+
+This section details the available endpoints for the Google Calendar Clone API.
+
+**Base URL:** `http://localhost:8080/api/v1`
+
+*(Note: The base URL is assumed from your `makefile` and repository structure. Please adjust `http://localhost:8080` and the `/api/v1` prefix if your setup differs.)*
 
 ---
 
-## 📁 Project Structure
+### 1. Events
 
-Here is an overview of the project's directory structure and the purpose of each file.
+#### `POST /events`
+
+Creates a new event.
+
+**Request Body:**
+```json
+{
+    "title": "Project Kick-off Meeting",
+    "description": "Discussing the new project timeline and deliverables.",
+    "start_time": "2025-11-05T14:00:00Z",
+    "end_time": "2025-11-05T15:30:00Z",
+    "location": "Main Conference Hall",
+    "is_all_day": false,
+    "guests": [
+        "manager@example.com",
+        "lead.dev@example.com"
+    ]
+}
