@@ -111,9 +111,9 @@ class EventResource(Resource):
     """
     Resource for managing a single event.
     Handles:
+    - GET /events/<uuid:event_id>
+    - PUT /events/<uuid:event_id>
     - DELETE /events/<uuid:event_id>
-    - GET /events/<uuid:event_id> (Optional, good to have)
-    - PUT /events/<uuid:event_id> (Optional, good to have)
     """
 
     def get(self, event_id):
@@ -127,6 +127,62 @@ class EventResource(Resource):
             return response_schema.dump(event), 200
 
         except Exception as e:
+            return {"message": "An error occurred", "details": str(e)}, 500
+
+    def put(self, event_id):
+        """Update (edit) a single event by its ID."""
+        try:
+            event = db.query(EventModel).get(event_id)
+            if not event:
+                return {"message": "Event not found"}, 404
+
+            json_data = request.get_json()
+            if not json_data:
+                return {"message": "No input data provided"}, 400
+
+            # 1. Validate input data, allowing partial updates
+            schema = EventSchema()
+            try:
+                # partial=True allows users to send only the fields they want to change
+                data = schema.load(json_data, partial=True)
+            except ValidationError as err:
+                return {"errors": err.messages}, 400
+
+            # 2. Separate guest emails if provided
+            # If 'guests' key is not in json, guest_emails will be None
+            guest_emails = data.pop("guests", None)
+
+            # 3. Update basic event fields
+            for key, value in data.items():
+                setattr(event, key, value)
+
+            # 4. Handle guest list update *if* 'guests' was part of the request
+            if guest_emails is not None:
+                # This logic replaces the entire guest list.
+                # First, delete all existing guests for this event.
+                db.query(EventGuestModel).filter_by(event_id=event_id).delete()
+
+                # Second, add the new guest list
+                new_guests = []
+                for email in guest_emails:
+                    new_guests.append(EventGuestModel(email=email, event_id=event_id))
+
+                # Add all new guests to the session
+                if new_guests:
+                    db.bulk_save_objects(new_guests)
+
+            # 5. Commit changes
+            db.commit()
+
+            # 6. Serialize and return the updated event
+            response_schema = EventResponseSchema()
+            return response_schema.dump(event), 200
+
+        except IntegrityError as e:
+            db.rollback()
+            return {"message": "Database integrity error", "details": str(e)}, 400
+        except Exception as e:
+            db.rollback()
             return {"message": "An error occurred", "details": str(e)}, 500
 
     def delete(self, event_id):
@@ -151,23 +207,3 @@ class EventResource(Resource):
         except Exception as e:
             db.rollback()
             return {"message": "An error occurred", "details": str(e)}, 500
-
-
-# --- How to register these resources in your Flask app ---
-#
-# from flask import Flask
-# from flask_restful import Api
-#
-# app = Flask(__name__)
-# api = Api(app)
-#
-# # Add the resources to the API
-# api.add_resource(EventListResource, '/events')
-# api.add_resource(EventResource, '/events/<uuid:event_id>')
-#
-# @app.teardown_appcontext
-# def shutdown_session(exception=None):
-#     db_session.remove() # Remove session for mock DB
-#
-# if __name__ == '__main__':
-#     app.run(debug=True)
