@@ -42,14 +42,7 @@ We use Docker to run a PostgreSQL database container. This avoids having to inst
 2.  Run the following command to pull the `postgres:16` image and start the container:
 
     ```bash
-    docker run -d \
-      --name postgres_server \
-      -e POSTGRES_USER=admin \
-      -e POSTGRES_PASSWORD=admin123 \
-      -e POSTGRES_DB=calendar_db \
-      -p 5432:5432 \
-      -v pg_data:/var/lib/postgresql/data \
-      postgres:16
+    docker run -d --name postgres_server -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin123 -e POSTGRES_DB=calendar_db -p 5432:5432 -v pg_data:/var/lib/postgresql/data postgres:16
     ```
 
 > **Note:** This command does the following:
