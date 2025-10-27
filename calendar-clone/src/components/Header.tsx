@@ -1,34 +1,55 @@
 import React from "react";
-import { Plus, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 
 interface HeaderProps {
   view: "month" | "week" | "day";
   setView: (view: "month" | "week" | "day") => void;
+  currentDate: Date;
+  onPrev: () => void;  
+  onNext: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ view, setView }) => {
+const Header: React.FC<HeaderProps> = ({ view, setView, currentDate, onPrev, onNext }) => {
+
+  const getTitle = () => {
+    if (view === "day") {
+      return currentDate.toLocaleDateString(undefined, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    }
+    if (view === "week") {
+      const startOfWeek = new Date(currentDate);
+      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      return `${startOfWeek.toLocaleDateString()} - ${endOfWeek.toLocaleDateString()}`;
+    }
+    if (view === "month") {
+      return currentDate.toLocaleDateString(undefined, {
+        month: "long",
+        year: "numeric",
+      });
+    }
+  };
+
   return (
     <header className="flex items-center justify-between px-6 py-3 border-b bg-white shadow-sm">
-      {/* Left section: title and navigation */}
       <div className="flex items-center gap-3">
-        <img
-          src="https://ssl.gstatic.com/calendar/images/dynamiclogo_2020q4/calendar_26_2x.png"
-          alt="logo"
-          className="w-8 h-8"
-        />
         <h1 className="text-2xl font-semibold">Calendar</h1>
         <div className="flex items-center gap-2 ml-6">
-          <button className="p-1 hover:bg-gray-100 rounded">
+          <button onClick={onPrev} className="p-1 hover:bg-gray-100 rounded">
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <button className="p-1 hover:bg-gray-100 rounded">
+          <button onClick={onNext} className="p-1 hover:bg-gray-100 rounded">
             <ChevronRight className="w-5 h-5" />
           </button>
-          <span className="font-medium text-gray-700 ml-2">October 2025</span>
+          <span className="font-medium text-gray-700 ml-2">{getTitle()}</span>
         </div>
       </div>
 
-      {/* Right section: view select */}
       <div className="flex items-center gap-4">
         <div className="relative">
           <select
